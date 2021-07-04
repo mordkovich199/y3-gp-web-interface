@@ -1,0 +1,75 @@
+<html>
+	<head>
+		<title>Project X</title>
+		<link rel="stylesheet" href="index.css">
+	</head>
+	<body>
+		<!-- Side navigation -->
+		<div class="sidenav">
+			<h1>Project X</h1>
+			<div class="button_group">
+				<form action="route_detail.html" method="GET" style="display: inline;">
+					<input id="route_search" name="route" type="text" placeholder="truck ID" />
+					<button type="submit">Search Route ID</button>
+				</form>
+				<button href="#">Current Deliveries</button>
+  				<button href="#">Past Deliveries</button>
+			</div>
+		</div>
+		<!-- Page content -->
+		<div class="main">
+  			<table>
+				<colgroup>
+					<col style="width: 10%;">
+					<col style="width: 30%;">
+					<col style="width: 30%;">
+					<col style="width: 15%;">
+					<col style="width: 15%;">
+				</colgroup>
+				<thead><tr>
+					<th>Route ID</th>
+					<th>Origin</th>
+					<th>Destination</th>
+					<th>% Complete</th>
+					<th>Temp. Score</th>
+				</tr></thead>
+				<tbody id="table_data">
+				</tbody>
+			</table>
+		</div>
+
+		<!-- Add Firebase app -->
+		<!-- The core Firebase JS SDK is always required and must be listed first -->
+		<script src="https://www.gstatic.com/firebasejs/8.6.7/firebase-app.js"></script>
+
+		<!-- TODO: Add SDKs for Firebase products that you want to use
+			https://firebase.google.com/docs/web/setup#available-libraries -->
+		<script src="https://www.gstatic.com/firebasejs/8.6.7/firebase-firestore.js"></script>
+
+		<script src="common.js"></script>
+		<script>
+
+			var db = init_firestore();
+			var data = {};
+
+			// Cannot get top-level collections. Consider putting these under document for enumeration?
+			top_level_collections = [
+				"truck_s34bt6"
+				// Add more id here
+			];
+
+			promises = [];
+			top_level_collections.forEach(function(key) {
+				var data = this[0];
+				var db = this[1];
+				var promises = this[2];
+				data[key] = {};
+				promises.push(db.collection(key).get().then(add_to_data.bind(null, data[key])));
+			}, [data, db, promises]);
+
+			var table_data = document.getElementById("table_data");
+			// Wait untill all data is received
+			Promise.all(promises).then(add_route_rows.bind(null, data, table_data));
+		</script>
+	</body>
+</html>

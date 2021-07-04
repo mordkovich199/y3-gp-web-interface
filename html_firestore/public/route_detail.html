@@ -1,0 +1,89 @@
+<html>
+	<head>
+		<title>Project X</title>
+		<link rel="stylesheet" href="index.css">
+	</head>
+	<body>
+		<!-- Side navigation -->
+		<div class="sideinfo">
+			<h1>Project X</h1>
+			<p>Delivery Method: <br/><span id="truck_id"></span></p>
+			<p>Origin: <br/><span id="origin"></span></p>
+			<p>Destination: <br/><span id="dest"></span></p>
+			<p>Progess: <br/><span id="progress"></span></p>
+			<p>Temp. Score: <br/><span id="temp_score"></span></p>
+			<div class="button_group">
+				<form action="index.html" style="display: inline;">
+					<button type="submit">Back</button>
+				</form>
+			</div>
+		</div>
+		<!-- Page content -->
+		<div class="main">
+  			<table>
+				<colgroup>
+					<col style="width: 20%;">
+					<col style="width: 40%;">
+					<col style="width: 40%;">
+				</colgroup>
+				<thead><tr>
+					<td>Sensor ID</td>
+					<td>Temp</td>
+					<td>Temp Socre</td>
+				</tr></thead>
+				<tbody id="table_data">
+				</tbody>
+			</table>
+		</div>
+
+
+		<!-- Add Firebase app -->
+		<!-- The core Firebase JS SDK is always required and must be listed first -->
+		<script src="https://www.gstatic.com/firebasejs/8.6.7/firebase-app.js"></script>
+
+		<!-- TODO: Add SDKs for Firebase products that you want to use
+			https://firebase.google.com/docs/web/setup#available-libraries -->
+		<script src="https://www.gstatic.com/firebasejs/8.6.7/firebase-firestore.js"></script>
+
+		<script src="common.js"></script>
+		<script>
+			var db = init_firestore();
+			var data = {};
+			var truck_id = read_GET_data().get("route");
+			var key = "truck_" + truck_id;
+			var info_key = "info_" + truck_id;
+
+			promises = [];
+
+			data[key] = {};
+			promises.push(db.collection(key).get().then(add_to_data.bind(null, data[key])));
+
+			var table_data = document.getElementById("table_data");
+			// Wait untill all data is received
+			Promise.all(promises).then(function() {
+				var __data = data[key];
+				var truck_id = key.split("_")[1];
+				var info_key = "info_" + truck_id;
+				var sensor_key = "sensors_" + truck_id;
+
+				if(!__data.hasOwnProperty(info_key)) {
+					alert(`Invalid key '${truck_id}'`);
+				}
+				else {
+					var info = __data[info_key];
+					var sensor = __data[sensor_key];
+
+					// Populate sidebar information
+					document.getElementById("truck_id").innerHTML = truck_id;
+					document.getElementById("origin").innerHTML = info.Departing;
+					document.getElementById("dest").innerHTML = info.Arriving;
+					document.getElementById("progress").innerHTML = `<progress style="width: 60%;margin-right: 5%;" id="route_progress" max="100" title="${info.Progress*100}%" value="${info.Progress*100}">${info.Progress*100}%</progress><span>${info.Progress*100}%</span>`;
+					document.getElementById("temp_score").innerHTML = info["Average Temperature"];
+
+					// Populate sensor table
+					add_sensor_rows.bind(null, sensor, table_data)();
+				}
+			});
+		</script>
+	</body>
+</html>
